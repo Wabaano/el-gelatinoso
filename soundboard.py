@@ -19,6 +19,33 @@ def load_audio_files():
     return audio_files
 
 @bot.command()
+async def upload(ctx):
+    # Check if the user has the "uploader" role
+    role = discord.utils.get(ctx.author.roles, name="uploader")
+    if not role:
+        await ctx.send("You don't have permission to upload files. Only users with the 'uploader' role can use this command.")
+        return
+
+    # Ensure there's an attachment in the message
+    if not ctx.message.attachments:
+        await ctx.send("Please attach an audio file to upload.")
+        return
+
+    # Process each attachment
+    for attachment in ctx.message.attachments:
+        if attachment.filename.endswith(('.mp3', '.wav', '.ogg')):
+            # Define the path where to save the file
+            sounds_folder = 'sounds'
+            os.makedirs(sounds_folder, exist_ok=True)  # Ensure the sounds folder exists
+            file_path = os.path.join(sounds_folder, attachment.filename)
+            
+            # Save the attachment to the sounds folder
+            await attachment.save(file_path)
+            await ctx.send(f"Uploaded '{attachment.filename}' to the sounds folder.")
+        else:
+            await ctx.send(f"'{attachment.filename}' is not a supported audio format. Only .mp3, .wav, and .ogg are allowed.")
+
+@bot.command()
 async def list(ctx):
     print("List command triggered")  # Debugging print
     audio_files = load_audio_files()
@@ -52,8 +79,7 @@ async def play_sound(interaction, audio_file):
 
         # Check if the bot is already playing audio
         if voice_client.is_playing():
-            # Optionally stop the currently playing audio
-            voice_client.stop()  # Uncomment this line if you want to allow interruptions
+            voice_client.stop()  # Stop currently playing audio if any
 
         # Prepare the audio source
         audio_source = discord.FFmpegPCMAudio(f'sounds/{audio_file}')
@@ -61,33 +87,29 @@ async def play_sound(interaction, audio_file):
         # Play the audio
         voice_client.play(audio_source, after=lambda e: print(f'Finished playing: {audio_file}'))
 
-#        await interaction.response.send_message(f"Now playing: {audio_file}", ephemeral=True)
-
         # Create a new view with disabled buttons
         new_view = discord.ui.View()
 
         # Disable all buttons after one is pressed
         for button in interaction.message.components[0].children:
-            button.disabled = True  # Disable all buttons
-            new_view.add_item(button)  # Add disabled buttons to the new view
+            button.disabled = True
+            new_view.add_item(button)
 
         # Update the message with the new view
         await interaction.message.edit(view=new_view)
 
         # Wait until the audio is done playing
         while voice_client.is_playing():
-            await asyncio.sleep(1)  # Use asyncio.sleep instead of discord.utils.sleep
+            await asyncio.sleep(1)
 
-        # Create a new view again to re-enable buttons
+        # Re-enable the buttons after playback
         final_view = discord.ui.View()
         for button in interaction.message.components[0].children:
-            button.disabled = False  # Re-enable all buttons
-            final_view.add_item(button)  # Add enabled buttons to the final view
+            button.disabled = False
+            final_view.add_item(button)
 
-        await interaction.message.edit(view=final_view)  # Update view again
+        await interaction.message.edit(view=final_view)
     else:
         await interaction.response.send_message("You are not connected to a voice channel.", ephemeral=True)
 
-
-
-bot.run('TOKEN HERE OR I WILL KILL ALL YOUR FAMILY')
+bot.run('TOKEN HERE')
