@@ -112,24 +112,24 @@ async def play_sound(interaction, audio_file):
         audio_source = discord.FFmpegPCMAudio(f'sounds/{audio_file}')
         voice_client.play(audio_source, after=lambda e: print(f'Finished playing: {audio_file}'))
 
-        new_view = discord.ui.View()
-        for button in interaction.message.components[0].children:
-            button.disabled = True
-            new_view.add_item(button)
+        #new_view = discord.ui.View()
+        #for button in interaction.message.components[0].children:
+         #   button.disabled = True
+         #   new_view.add_item(button)
 
-        await interaction.message.edit(view=new_view)
+        #await interaction.message.edit(view=new_view)
 
         while voice_client.is_playing():
             await asyncio.sleep(1)
 
-        final_view = discord.ui.View()
-        for button in interaction.message.components[0].children:
-            button.disabled = False
-            final_view.add_item(button)
+        #final_view = discord.ui.View()
+        #for button in interaction.message.components[0].children:
+         #   button.disabled = False
+         #   final_view.add_item(button)
 
-        await interaction.message.edit(view=final_view)
-    else:
-        await interaction.response.send_message("You are not connected to a voice channel.", ephemeral=True)
+        #await interaction.message.edit(view=final_view)
+    #else:
+        #await interaction.response.send_message("You are not connected to a voice channel.", ephemeral=True)
 
 
 bot.run('TOKEN HERE')
